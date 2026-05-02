@@ -1,8 +1,2 @@
 # Each line is a file pattern followed by one or more owners.
-
-# ==============================
-# Code Owners
-# ==============================
-# <git name> @<git id>
-# ===============================
-* @<git id>
+* @pascal-pfeiffer
