@@ -1,6 +1,6 @@
-# TabH2O Spreadsheet Plugins
+# TabH2O Spreadsheet Integrations
 
-Office add-ins that bring TabH2O predictions into Excel and Google Sheets. Both plugins do the same thing (pick a sheet, configure target and task, predictions get written back into the empty target cells), they just use platform-native APIs.
+Office add-ins that bring TabH2O predictions into Excel and Google Sheets. Both integrations do the same thing (pick a sheet, configure target and task, predictions get written back into the empty target cells), they just use platform-native APIs.
 
 ## Install
 

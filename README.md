@@ -21,8 +21,9 @@
 
 This is the public companion repo for TabH2O. You will find here:
 
-- The agent skill spec (`skill/SKILL.md`) for Claude Code, pi, and similar harnesses
-- The Excel and Google Sheets plugins (`plugins/`)
+- The agent skill spec (`agentic/skills/tabh2o-predict/SKILL.md`) for Claude Code, pi, and similar harnesses
+- A Claude Code plugins marketplace at the repo root (`.claude-plugin/marketplace.json`)
+- The Excel and Google Sheets integrations (`integrations/`)
 - Runnable curl and Python examples (`examples/`)
 - Links to the hosted service, the full docs, the blog post, and a Kaggle notebook
 
@@ -75,8 +76,19 @@ In this repo:
 
 - [`examples/curl/`](./examples/curl): one runnable shell script per task type
 - [`examples/python/`](./examples/python): plain `requests`, a CSV-upload script, and a pandas helper
-- [`skill/SKILL.md`](./skill/SKILL.md): agent skill in the [agentskills.io](https://agentskills.io) format. Drops into Claude Code, pi, and other harnesses.
-- [`plugins/excel/`](./plugins/excel) and [`plugins/gsheets/`](./plugins/gsheets): the spreadsheet add-ins
+- [`agentic/skills/tabh2o-predict/SKILL.md`](./agentic/skills/tabh2o-predict/SKILL.md): agent skill in the [agentskills.io](https://agentskills.io) format. Drops into Claude Code, pi, and other harnesses.
+- [`integrations/excel/`](./integrations/excel) and [`integrations/gsheets/`](./integrations/gsheets): the spreadsheet add-ins
+
+## Claude Code marketplace
+
+This repo doubles as a [Claude Code plugins marketplace](https://code.claude.com/docs/en/plugins). Install it once, then pull in any TabH2O skill or plugin from inside Claude Code:
+
+```
+/plugin marketplace add h2oai/tabh2o
+/plugin install tabh2o-predict@tabh2o
+```
+
+The same skill is also usable standalone in any harness that reads the [agentskills.io](https://agentskills.io) format — the marketplace is just one delivery channel.
 
 ## Free tier
 
@@ -94,7 +106,7 @@ For higher limits [contact us](https://h2oai.com/demo/).
 
 ## Privacy
 
-Data is processed in memory and discarded after the response. Nothing is stored, logged, cached, or used for training. Column names and category labels can be replaced with arbitrary identifiers (`c1`, `c2`, ...) without changing the predictions. Details in [`skill/SKILL.md`](./skill/SKILL.md#privacy--anonymization).
+Data is processed in memory and discarded after the response. Nothing is stored, logged, cached, or used for training. Column names and category labels can be replaced with arbitrary identifiers (`c1`, `c2`, ...) without changing the predictions. Details in [`agentic/skills/tabh2o-predict/SKILL.md`](./agentic/skills/tabh2o-predict/SKILL.md#privacy--anonymization).
 
 ## Contributing
 

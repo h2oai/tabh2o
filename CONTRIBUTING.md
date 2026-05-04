@@ -1,6 +1,6 @@
 # Contributing to TabH2O
 
-This repo holds the public-facing assets: the agent skill, the Excel and Google Sheets plugins, runnable examples, and the README. The model itself, the training code, and the web app live in a private repository.
+This repo holds the public-facing assets: the agent skill, the Claude Code plugins marketplace, the Excel and Google Sheets integrations, runnable examples, and the README. The model itself, the training code, and the web app live in a private repository.
 
 ## Issues, questions, ideas
 
@@ -12,8 +12,9 @@ If real data is involved, describe its shape (roughly how many rows and columns,
 
 PRs are welcome on:
 
-- `skill/SKILL.md`
-- `plugins/excel/` and `plugins/gsheets/`
+- `agentic/skills/tabh2o-predict/SKILL.md` (and any future skills or plugins under `agentic/`)
+- `.claude-plugin/marketplace.json` (regenerated via `make update-marketplace`)
+- `integrations/excel/` and `integrations/gsheets/`
 - `examples/`
 - The README and this file
 
@@ -21,7 +22,7 @@ Before you open one:
 
 1. For non-trivial changes, file an issue first so we can agree on direction before code is written.
 2. Keep the PR focused. One concern per PR.
-3. Test plugin changes locally. The [plugins README](./plugins/README.md) has sideload and paste-in instructions.
+3. Test integration changes locally. The [integrations README](./integrations/README.md) has sideload and paste-in instructions.
 4. By submitting a PR you agree to license your contribution under [Apache 2.0](./LICENSE).
 
 ## What lives elsewhere
