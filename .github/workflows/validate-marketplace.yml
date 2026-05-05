@@ -1,0 +1,40 @@
+name: Validate Marketplace
+
+on:
+  push:
+    paths:
+      - "agentic/plugins/*/.claude-plugin/plugin.json"
+      - ".claude-plugin/marketplace.json"
+      - ".claude-plugin/update-marketplace.js"
+  pull_request:
+    paths:
+      - "agentic/plugins/*/.claude-plugin/plugin.json"
+      - ".claude-plugin/marketplace.json"
+      - ".claude-plugin/update-marketplace.js"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g ajv-cli ajv-formats
+
+      - name: Validate all plugin.json files
+        run: |
+          shopt -s nullglob
+          failed=0
+          for manifest in agentic/plugins/*/.claude-plugin/plugin.json; do
+            echo "Validating $manifest"
+            if ! ajv validate -s .claude-plugin/plugin-schema.json -d "$manifest" --spec=draft2020 -c ajv-formats; then
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Check marketplace.json is up to date
+        run: node .claude-plugin/update-marketplace.js --check

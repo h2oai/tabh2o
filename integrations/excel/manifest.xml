@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="TaskPaneApp">
+
+  <Id>a7e3f8b2-4c1d-4e9a-b5f6-8d2c7a9e1b3f</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>H2O.ai</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="TabH2O"/>
+  <Description DefaultValue="Tabular predictions for your Excel data"/>
+  <IconUrl DefaultValue="https://tabh2o-public.cdn.h2oai.com/assets/logos/tabh2o-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://tabh2o-public.cdn.h2oai.com/assets/logos/tabh2o-80.png"/>
+  <SupportUrl DefaultValue="https://tabh2o.h2oai.com/docs"/>
+
+  <Hosts>
+    <Host Name="Workbook"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://tabh2o.h2oai.com/plugins/excel"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+
+          <!-- Ribbon button to open task pane -->
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="CommandsGroup">
+                <Label resid="CommandsGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="OpenTaskpane">
+                  <Label resid="OpenTaskpane.Label"/>
+                  <Supertip>
+                    <Title resid="OpenTaskpane.Label"/>
+                    <Description resid="OpenTaskpane.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="https://tabh2o-public.cdn.h2oai.com/assets/logos/tabh2o-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://tabh2o-public.cdn.h2oai.com/assets/logos/tabh2o-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://tabh2o-public.cdn.h2oai.com/assets/logos/tabh2o-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://tabh2o.h2oai.com/plugins/excel"/>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://tabh2o.h2oai.com/docs"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title" DefaultValue="TabH2O"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="TabH2O"/>
+        <bt:String id="OpenTaskpane.Label" DefaultValue="Open TabH2O"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description" DefaultValue="Tabular predictions for your Excel data."/>
+        <bt:String id="OpenTaskpane.Tooltip" DefaultValue="Open the TabH2O prediction panel."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

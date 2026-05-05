@@ -1,0 +1,18 @@
+{
+  "name": "tabh2o",
+  "description": "TabH2O agent skills and plugins — tabular foundation model predictions for Claude Code and other agent harnesses.",
+  "owner": {
+    "name": "H2O.ai"
+  },
+  "plugins": [
+    {
+      "name": "tabh2o-predict",
+      "description": "Makes predictions on tabular data using the TabH2O foundation model API. Supports classification, regression (including timeseries forecasting), clustering, and missing value imputation. Send data as JSON or CSV, get results back.",
+      "source": "./agentic/skills",
+      "strict": false,
+      "skills": [
+        "./tabh2o-predict"
+      ]
+    }
+  ]
+}
