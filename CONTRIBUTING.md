@@ -12,7 +12,7 @@ If real data is involved, describe its shape (roughly how many rows and columns,
 
 PRs are welcome on:
 
-- `agentic/skills/tabh2o-predict/SKILL.md` (and any future skills or plugins under `agentic/`)
+- `agentic/skills/tabh2o/SKILL.md` (and any future skills or plugins under `agentic/`)
 - `.claude-plugin/marketplace.json` (regenerated via `make update-marketplace`)
 - `integrations/excel/` and `integrations/gsheets/`
 - `examples/`

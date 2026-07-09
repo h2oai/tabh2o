@@ -1,8 +1,11 @@
 ---
-name: tabh2o-predict
+name: tabh2o
 description: Makes predictions on tabular data using the TabH2O foundation model API. Supports classification, regression (including timeseries forecasting), clustering, and missing value imputation. Send data as JSON or CSV, get results back.
 version: 1.0.0
-api_endpoint: https://tabh2o.h2oai.com/api/v1/predict
+api_endpoints:
+  - https://tabh2o.h2oai.com/api/v1/predict    # classification, regression, imputation
+  - https://tabh2o.h2oai.com/api/v1/forecast   # timeseries regression (requires time_column)
+  - https://tabh2o.h2oai.com/api/v1/explore     # unsupervised discovery: clustering
 auth: Bearer API key (obtain at https://tabh2o.h2oai.com)
 ---
 
@@ -12,20 +15,27 @@ auth: Bearer API key (obtain at https://tabh2o.h2oai.com)
 
 ## What it does
 
-TabH2O is a foundation model for tabular data. Supports four task types:
+TabH2O is a foundation model for tabular data. Supports these task types across three endpoints:
 
-| Task | Description | Requires target? |
-|------|-------------|-----------------|
-| `classification` | Predict categorical labels | Yes |
-| `regression` | Predict continuous values (add `time_column` for timeseries) | Yes |
-| `clustering` | Group similar rows (paid plans only) | No |
-| `imputation` | Fill missing values (paid plans only) | No |
+| Task | Description | Endpoint | Requires target? |
+|------|-------------|----------|-----------------|
+| `classification` | Predict categorical labels | `/api/v1/predict` | Yes |
+| `regression` | Predict continuous values | `/api/v1/predict` | Yes |
+| timeseries forecasting | Predict future values over time (regression + `time_column`) | `/api/v1/forecast` | Yes |
+| `imputation` | Fill missing values (paid plans only) | `/api/v1/predict` | No |
+| `clustering` | Group similar rows (paid plans only) | `/api/v1/explore` | No |
 
 Input via JSON arrays or a single CSV file.
 
 ## API
 
-**Endpoint:** `POST https://tabh2o.h2oai.com/api/v1/predict`
+Three endpoints share the same request/response format; pick by task:
+
+- `POST https://tabh2o.h2oai.com/api/v1/predict` — per-row predictions: `classification`, `regression`, `imputation`. All require a `test` set; `target_column` is required for `classification`/`regression` (imputation has none).
+- `POST https://tabh2o.h2oai.com/api/v1/forecast` — **timeseries forecasting** (regression over time). Requires a `target_column` and a `time_column`; `task` may be omitted (it is always regression). `time_column` is only accepted here.
+- `POST https://tabh2o.h2oai.com/api/v1/explore` — **unsupervised** discovery (`clustering`). No target column; `test` is optional (omit it to operate on the training set itself).
+
+Sending a task to the wrong endpoint returns `422 wrong_endpoint` telling you which one to use.
 
 **Auth:** `Authorization: Bearer <API_KEY>`
 
@@ -48,12 +58,11 @@ Accepts two content types:
     "columns": ["col1", "col2", ...]
   },
   "target_column": "target_col",
-  "task": "classification",
-  "time_column": "date_col",
-  "n_clusters": 5,
-  "cluster_method": "kmeans"
+  "task": "classification"
 }
 ```
+
+Task-specific fields (`time_column`, `n_clusters`, `cluster_method`, `params`) are described in the table below; add them only for the tasks/endpoints that use them.
 
 **Fields:**
 
@@ -61,18 +70,21 @@ Accepts two content types:
 |-------|------|----------|-------------|
 | `train.data` | array of arrays | Yes | Training rows |
 | `train.columns` | array of strings | Yes | Column names for training data |
-| `test.data` | array of arrays | Yes | Test rows |
-| `test.columns` | array of strings | Yes | Column names for test data |
-| `task` | string | Yes | One of: `classification`, `regression`, `clustering`, `imputation` |
-| `target_column` | string | Supervised tasks | Name of the target column in `train.columns` |
-| `time_column` | string | Optional | Name of the time/date column. Enables timeseries forecasting (regression only). Any format `pd.to_datetime()` can parse. |
-| `n_clusters` | integer (2-1000) | Clustering (kmeans) | Number of clusters. Required for kmeans, ignored for dbscan. |
-| `cluster_method` | string | Optional | Clustering algorithm: `kmeans` (default) or `dbscan`. |
+| `test.data` | array of arrays | classification/regression | Test rows (for imputation, the rows whose missing cells to fill). Optional for imputation and clustering — omit to operate on the training set itself. |
+| `test.columns` | array of strings | With `test` | Column names for test data |
+| `task` | string | Yes (omit on `/forecast`) | One of: `classification`, `regression`, `imputation`, `clustering`. On `/api/v1/forecast` it may be omitted (always regression). |
+| `target_column` | string | classification/regression | Name of the target column in `train.columns`. Only valid for `classification`/`regression`/forecasting (not `imputation` or `clustering`). |
+| `time_column` | string | Forecast | Name of the time/date column (any format `pd.to_datetime()` can parse). Enables timeseries forecasting — send the request to `/api/v1/forecast`, where it is **required**. Also accepted on `/api/v1/predict` with `task=regression` for backwards compatibility (deprecated); rejected on `/api/v1/explore`. |
+| `n_clusters` | integer (2-1000) | Clustering (kmeans) | Number of clusters. Required for kmeans, ignored for dbscan. Only valid for `clustering`. |
+| `cluster_method` | string | Optional | Clustering algorithm: `kmeans` (default) or `dbscan`. Only valid for `clustering`. |
+| `params` | object | Optional | Server-side tuning knobs: `n_estimators` (1-128), `n_permutations` (1-64), `batch_size` (1-128). Sensible defaults if omitted. JSON requests only — not supported for CSV file uploads. |
 
 **Rules:**
-- For supervised tasks (`classification`, `regression`): `train.data` rows include the target value, `test.data` rows do not. `train.columns` includes the target, `test.columns` does not.
-- For unsupervised tasks (`clustering`, `imputation`): `train.columns` and `test.columns` must match. No target column needed.
-- For `imputation`: test data should contain null/missing values to be filled.
+- `classification`, `regression`, and `imputation` go to `/api/v1/predict`; `clustering` goes to `/api/v1/explore`. Timeseries forecasting goes to `/api/v1/forecast`. The wrong pairing returns `422 wrong_endpoint`.
+- Timeseries forecasting (`/api/v1/forecast`, regression over time): provide `time_column` (required there); `task` may be omitted. For backwards compatibility, `/api/v1/predict` also serves `task=regression` + `time_column` as a forecast (deprecated — prefer `/api/v1/forecast`).
+- For `classification`/`regression`: `train.data` rows include the target value, `test.data` rows do not. `train.columns` includes the target, `test.columns` does not.
+- For `imputation`: no target column; `test.data` rows should contain the null/missing cells to fill (and `test.columns` must match `train.columns`). `test` is optional — omit it to impute the training rows themselves.
+- For `clustering` (`/explore`): `train.columns` and `test.columns` must match. No target column. `test` is optional — omit it to operate on the training set itself.
 - Column order in `columns` must match the order of values in each `data` row.
 - Cell values can be: string, number, boolean, or null.
 
@@ -84,13 +96,14 @@ Accepts two content types:
 |-------|------|----------|-------------|
 | `file` | file | Yes | CSV file with header row |
 | `task` | string | Yes | Task type (see above) |
-| `target_column` | string | Supervised tasks | Name of the target column |
-| `time_column` | string | Optional | Name of the time/date column (enables timeseries forecasting, regression only) |
+| `target_column` | string | classification/regression | Name of the target column |
+| `time_column` | string | Forecast | Time/date column. Enables timeseries forecasting; send the request to `/api/v1/forecast` (required there; deprecated compat on `/api/v1/predict` with `task=regression`; rejected on `/api/v1/explore`). |
 | `n_clusters` | integer | Clustering (kmeans) | Number of clusters. Required for kmeans. |
 | `cluster_method` | string | Optional | `kmeans` (default) or `dbscan`. |
 
-For supervised tasks: rows where the target column is empty are test rows; the rest are training rows.
-For unsupervised tasks: all rows are used. For imputation, cells with missing values will be filled.
+Post `classification`/`regression`/`imputation` to `/api/v1/predict`, timeseries forecasting to `/api/v1/forecast`, and `clustering` to `/api/v1/explore` (same as JSON).
+For classification/regression: rows where the target column is empty are test rows; the rest are training rows.
+For clustering and imputation: all rows are used. For imputation, cells with missing values will be filled.
 
 ### Responses
 
@@ -164,7 +177,7 @@ Only task-relevant fields are returned. `probabilities` for classification, `con
 | Max columns | 100 |
 | Max payload | 50 MB |
 
-**Note:** Clustering and imputation are not available on the free tier. [Contact sales](https://h2oai.com/demo/) for access to unsupervised tasks.
+**Note:** Clustering and imputation are not available on the free tier. [Contact sales](https://h2oai.com/demo/) for access to these tasks.
 
 ## Privacy & anonymization
 
@@ -177,7 +190,7 @@ You can fully anonymize data with zero impact on prediction quality:
 
 ## Usage guidelines for agents
 
-1. **Choose the right task type.** Classification for categories, regression for continuous numbers (add `time_column` for forecasting with dates), clustering to discover groups, imputation to fill missing values.
+1. **Choose the right task type and endpoint.** Classification (categories), regression (continuous numbers), and imputation (fill missing values) go to `/api/v1/predict`. Timeseries forecasting (regression with a `time_column`) goes to `/api/v1/forecast`. Clustering (discover groups) goes to `/api/v1/explore`.
 2. **Include enough training data.** More rows = better predictions. Aim for 20+ training rows for supervised tasks.
 3. **Keep columns consistent.** Train and test must have the same feature columns.
 4. **Handle errors gracefully.** On 429, back off and retry. On 503/504, retry with exponential backoff. On 422, fix the request.
@@ -238,12 +251,11 @@ date,store,sales
 ```
 
 ```bash
-curl -s -X POST https://tabh2o.h2oai.com/api/v1/predict \
+curl -s -X POST https://tabh2o.h2oai.com/api/v1/forecast \
   -H "Authorization: Bearer $TABH2O_API_KEY" \
   -F file=@sales.csv \
   -F target_column=sales \
-  -F time_column=date \
-  -F task=regression
+  -F time_column=date
 ```
 
 ## Example: Clustering (CSV)
@@ -258,7 +270,7 @@ age,income,spending_score
 ```
 
 ```bash
-curl -s -X POST https://tabh2o.h2oai.com/api/v1/predict \
+curl -s -X POST https://tabh2o.h2oai.com/api/v1/explore \
   -H "Authorization: Bearer $TABH2O_API_KEY" \
   -F file=@customers.csv \
   -F task=clustering \

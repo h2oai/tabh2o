@@ -18,4 +18,4 @@ All three only depend on `requests` (and `pandas` for the last one).
 ## See also
 
 - [TabH2O solves Titanic, no training needed](https://www.kaggle.com/code/jesucristo/tabh2o-solves-titanic-no-training-needed): end-to-end Kaggle notebook
-- [`skill/SKILL.md`](../../skill/SKILL.md): the agent skill spec, with the full API reference
+- [`agentic/skills/tabh2o/SKILL.md`](../../agentic/skills/tabh2o/SKILL.md): the agent skill spec, with the full API reference
