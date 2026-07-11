@@ -1,0 +1,53 @@
+name: 🐛 Bug report
+description: Something isn't working — API call, plugin, skill, example, or docs.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did you hit this?
+      options:
+        - API
+        - Excel plugin
+        - Google Sheets plugin
+        - Agent skill (SKILL.md)
+        - Examples (curl / python)
+        - Documentation
+        - Web app (tabh2o.h2oai.com)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Screenshots welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How can we reproduce it?
+      description: |
+        Minimal repro — sanitized request body or code. Please don't paste real / sensitive data; describe the shape (rows x columns, types) instead.
+      render: shell
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: |
+        E.g. Python 3.12 + requests 2.32 / Excel for Mac 16.78 / Chrome 122 / pi 0.10.
+      placeholder: |
+        - OS:
+        - Client / version:
+        - Plugin version (if applicable):
