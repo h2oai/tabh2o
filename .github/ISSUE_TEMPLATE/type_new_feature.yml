@@ -1,0 +1,39 @@
+name: 💡 Feature request
+description: Suggest a new feature, improvement, or example.
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: What does this affect?
+      options:
+        - API
+        - Excel plugin
+        - Google Sheets plugin
+        - Agent skill
+        - Examples
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How you'd like it to work. API shape, UI sketch, code snippet — whatever fits.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+      description: Optional. Other approaches you tried or thought about.
