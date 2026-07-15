@@ -7,7 +7,7 @@
 <h1 align="center">TabH2O</h1>
 
 <p align="center">
-  A foundation model for tabular data. One API covers classification, regression, time-series forecasting, clustering, and missing-value imputation. No fitting step on your side.
+  A foundation model for tabular data. One API covers classification, regression, time-series forecasting, clustering, missing-value imputation, and anomaly detection. No fitting step on your side.
 </p>
 
 <p align="center">
@@ -40,6 +40,7 @@ TabH2O is a foundation model trained on millions of synthetic datasets. You give
 | Timeseries forecasting | `/api/v1/forecast` | What will sales look like next week? |
 | `imputation` (paid plans) | `/api/v1/predict` | Fill in the missing cells in this table. |
 | `clustering` (paid plans) | `/api/v1/explore` | Which customers behave alike? |
+| `anomaly_detection` (paid plans) | `/api/v1/explore` | Which of these transactions look suspicious? |
 
 The [blog post](https://h2o.ai/blog/2026/introducing-tabh2o/) explains the why and the how.
 
