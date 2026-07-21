@@ -1,6 +1,6 @@
 ---
 name: tabh2o
-description: Makes predictions on tabular data using the TabH2O foundation model API. Supports classification, regression (including timeseries forecasting), clustering, missing value imputation, and anomaly detection. Send data as JSON or CSV, get results back.
+description: Makes predictions on tabular data using the TabH2O foundation model API. Supports classification, regression (including timeseries forecasting), clustering, missing value imputation, and anomaly detection, with optional global feature importance for classification and regression. Send data as JSON or CSV, get results back.
 version: 1.0.0
 api_endpoints:
   - https://tabh2o.h2oai.com/api/v1/predict    # classification, regression, imputation
@@ -11,7 +11,7 @@ auth: Bearer API key (obtain at https://tabh2o.h2oai.com)
 
 # TabH2O - Tabular Prediction API
 
-**Keywords**: tabular data, classification, regression, timeseries, forecasting, clustering, imputation, anomaly detection, outlier detection, prediction, structured data, machine learning, foundation model, zero-shot, no-code ML, API, time_column
+**Keywords**: tabular data, classification, regression, timeseries, forecasting, clustering, imputation, anomaly detection, outlier detection, prediction, structured data, machine learning, foundation model, zero-shot, no-code ML, API, time_column, feature importance, feature attribution, explainability, integrated gradients
 
 ## What it does
 
@@ -26,7 +26,7 @@ TabH2O is a foundation model for tabular data. Supports these task types across 
 | `clustering` | Group similar rows (paid plans only) | `/api/v1/explore` | No |
 | `anomaly_detection` | Score rows by how anomalous they are (paid plans only) | `/api/v1/explore` | No |
 
-Input via JSON arrays or a single CSV file.
+Input via JSON arrays or a single CSV file. Classification and regression requests can additionally return **global feature importance** scores (Integrated Gradients) by setting `feature_importance: true`.
 
 ## API
 
@@ -79,6 +79,7 @@ Task-specific fields (`time_column`, `n_clusters`, `cluster_method`, `params`) a
 | `n_clusters` | integer (2-1000) | Clustering (kmeans) | Number of clusters. Required for kmeans, ignored for dbscan. Only valid for `clustering`. |
 | `cluster_method` | string | Optional | Clustering algorithm: `kmeans` (default) or `dbscan`. Only valid for `clustering`. |
 | `params` | object | Optional | Server-side tuning knobs: `n_estimators` (1-128), `batch_size` (1-128). Not applicable to `anomaly_detection`. Sensible defaults if omitted. JSON requests only — not supported for CSV file uploads. |
+| `feature_importance` | boolean | Optional | Set `true` to also return global per-feature importance scores (Integrated Gradients) alongside the predictions. `classification`/`regression` on `/api/v1/predict` only (not forecasting or unsupervised tasks); requires `target_column`; max 100 features. |
 
 **Rules:**
 - `classification`, `regression`, and `imputation` go to `/api/v1/predict`; `clustering` and `anomaly_detection` go to `/api/v1/explore`. Timeseries forecasting goes to `/api/v1/forecast`. The wrong pairing returns `422 wrong_endpoint`.
@@ -87,6 +88,7 @@ Task-specific fields (`time_column`, `n_clusters`, `cluster_method`, `params`) a
 - For `imputation`: no target column; `test.data` rows should contain the null/missing cells to fill (and `test.columns` must match `train.columns`). `test` is optional — omit it to impute the training rows themselves.
 - For `clustering` and `anomaly_detection` (`/explore`): `train.columns` and `test.columns` must match. No target column. `test` is optional — omit it to operate on the training set itself.
 - For `anomaly_detection`: the response returns `anomaly_scores` (higher = more anomalous).
+- `feature_importance: true` adds a `feature_importance` array to the response (see Responses). Classification and regression only; rejected with 422 for forecasting, unsupervised tasks, and datasets with more than 100 features. The computation runs synchronously in the same request, so allow a generous client timeout.
 - Column order in `columns` must match the order of values in each `data` row.
 - Cell values can be: string, number, boolean, or null.
 
@@ -102,6 +104,7 @@ Task-specific fields (`time_column`, `n_clusters`, `cluster_method`, `params`) a
 | `time_column` | string | Forecast | Time/date column. Enables timeseries forecasting; send the request to `/api/v1/forecast` (required there; deprecated compat on `/api/v1/predict` with `task=regression`; rejected on `/api/v1/explore`). |
 | `n_clusters` | integer | Clustering (kmeans) | Number of clusters. Required for kmeans. |
 | `cluster_method` | string | Optional | `kmeans` (default) or `dbscan`. |
+| `feature_importance` | string | Optional | `true` to also return global feature importance (classification/regression only, max 100 features). |
 
 Post `classification`/`regression`/`imputation` to `/api/v1/predict`, timeseries forecasting to `/api/v1/forecast`, and `clustering`/`anomaly_detection` to `/api/v1/explore` (same as JSON).
 For classification/regression: rows where the target column is empty are test rows; the rest are training rows.
@@ -155,6 +158,20 @@ For clustering, imputation, and anomaly detection: all rows are used. For imputa
 }
 ```
 
+**Classification or regression with `feature_importance: true` (200):** the usual fields, plus a `feature_importance` array:
+```json
+{
+  "predictions": ["No", "Yes"],
+  "probabilities": [[0.63, 0.37], [0.20, 0.80]],
+  "feature_importance": [
+    { "feature": "income", "importance": 0.71, "mean_abs_attribution": 0.165 },
+    { "feature": "age", "importance": 0.29, "mean_abs_attribution": 0.068 }
+  ],
+  "metadata": { "task": "classification", "train_rows": 4, "test_rows": 2, "columns": 3, "time_ms": 1210 }
+}
+```
+Global importance per feature, sorted descending. `importance` is the normalized share for ranking — shares sum to 1. `mean_abs_attribution` is the un-normalized mean |attribution| across the explained test rows, in model-output units (class probability for classification, target units for regression) — use it for absolute thresholds or comparisons across requests.
+
 **Anomaly detection (200):**
 ```json
 {
@@ -164,7 +181,7 @@ For clustering, imputation, and anomaly detection: all rows are used. For imputa
 ```
 Higher `anomaly_scores` = more anomalous.
 
-Only task-relevant fields are returned. `probabilities` for classification, `confidence_intervals` for regression, `imputed_data`/`imputed_columns`/`imputed_mask` for imputation, `anomaly_scores` for anomaly detection.
+Only task-relevant fields are returned. `probabilities` for classification, `confidence_intervals` for regression, `imputed_data`/`imputed_columns`/`imputed_mask` for imputation, `anomaly_scores` for anomaly detection, `feature_importance` only when requested.
 
 ### Error responses
 
@@ -208,6 +225,7 @@ You can fully anonymize data with zero impact on prediction quality:
 4. **Handle errors gracefully.** On 429, back off and retry. On 503/504, retry with exponential backoff. On 422, fix the request.
 5. **Anonymize sensitive data.** Rename columns, map categories to integers.
 6. **Interpret results in context.** Use `probabilities` for classification confidence, `confidence_intervals` for regression uncertainty, `imputed_mask` to see what was filled in.
+7. **Explain predictions when the user asks "why".** For classification/regression, set `feature_importance: true` to get a ranked list of which features drive the model — useful for feature selection, sanity checks, and explaining results. Expect the request to take longer.
 
 ## Example: Classification (JSON)
 

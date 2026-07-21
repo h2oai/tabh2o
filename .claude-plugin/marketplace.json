@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "tabh2o",
-      "description": "Makes predictions on tabular data using the TabH2O foundation model API. Supports classification, regression (including timeseries forecasting), clustering, missing value imputation, and anomaly detection. Send data as JSON or CSV, get results back.",
+      "description": "Makes predictions on tabular data using the TabH2O foundation model API. Supports classification, regression (including timeseries forecasting), clustering, missing value imputation, and anomaly detection, with optional global feature importance for classification and regression. Send data as JSON or CSV, get results back.",
       "source": "./agentic/skills",
       "strict": false,
       "skills": [
