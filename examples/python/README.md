@@ -15,6 +15,8 @@ export TABH2O_API_KEY=<your-key>     # get one at https://tabh2o.h2oai.com
 
 All three only depend on `requests` (and `pandas` for the last one).
 
+For classification and regression you can add `"feature_importance": true` to any payload to also get global per-feature importance scores (Integrated Gradients) in the response — see the [skill spec](../../agentic/skills/tabh2o/SKILL.md) for details.
+
 ## See also
 
 - [TabH2O solves Titanic, no training needed](https://www.kaggle.com/code/jesucristo/tabh2o-solves-titanic-no-training-needed): end-to-end Kaggle notebook

@@ -42,6 +42,8 @@ TabH2O is a foundation model trained on millions of synthetic datasets. You give
 | `clustering` (paid plans) | `/api/v1/explore` | Which customers behave alike? |
 | `anomaly_detection` (paid plans) | `/api/v1/explore` | Which of these transactions look suspicious? |
 
+Classification and regression requests can additionally return global feature importance scores (Integrated Gradients) by setting `feature_importance: true` — see the [skill spec](./agentic/skills/tabh2o/SKILL.md) for details.
+
 The [blog post](https://h2o.ai/blog/2026/introducing-tabh2o/) explains the why and the how.
 
 ## Quickstart
