@@ -6,6 +6,7 @@ api_endpoints:
   - https://tabh2o.h2oai.com/api/v1/predict    # classification, regression, imputation
   - https://tabh2o.h2oai.com/api/v1/forecast   # timeseries regression (requires time_column)
   - https://tabh2o.h2oai.com/api/v1/explore     # unsupervised discovery: clustering, anomaly_detection
+  - https://tabh2o.h2oai.com/api/v1/estimate   # price/quota check from shape alone (no data sent)
 auth: Bearer API key (obtain at https://tabh2o.h2oai.com)
 ---
 
@@ -189,18 +190,20 @@ Only task-relevant fields are returned. `probabilities` for classification, `con
 |--------|-----------|---------|
 | 401 | `invalid_api_key` | Missing, invalid, or revoked API key |
 | 422 | `validation_error` | Bad request body, data too large, wrong format |
+| 422 | `request_exceeds_cell_limit` | Request alone is bigger than a cell quota window — split the data into smaller requests; retrying unchanged can never succeed |
 | 429 | `rate_limit_exceeded` | Too many requests per minute — wait and retry |
-| 429 | `quota_exceeded` | Daily or monthly quota reached |
+| 429 | `quota_exceeded` | Cell quota (minute, day, or month) reached |
 | 503 | `service_unavailable` | Backend temporarily down — retry with backoff |
 | 504 | `timeout` | Inference timed out — try a smaller dataset |
 
 ### Limits (free tier)
 
+Usage is priced per **cell**: one cell per value processed, (train rows + test rows) × columns; `feature_importance` requests count at a multiplier (default ×2; `/api/v1/estimate` returns the live rate and multiplier). The first 5M cells per calendar month are free (counted at the same multiplier) — on the free tier that allowance is the monthly quota. Each response reports its consumption in the `usage` field and the `X-Usage-Cells` header; remaining quota is in the `X-Cell-Remaining-{Minute,Day,Month}` headers.
+
 | Limit | Value |
 |-------|-------|
-| Requests/minute | 2 |
-| Requests/day | 20 |
-| Requests/month | 500 |
+| Requests/minute | 10 |
+| Cells/minute, day, month | 5M |
 | Available tasks | Classification, Regression |
 | Max rows per request | 100,000 |
 | Max columns | 100 |
@@ -222,10 +225,11 @@ You can fully anonymize data with zero impact on prediction quality:
 1. **Choose the right task type and endpoint.** Classification (categories), regression (continuous numbers), and imputation (fill missing values) go to `/api/v1/predict`. Timeseries forecasting (regression with a `time_column`) goes to `/api/v1/forecast`. Clustering (discover groups) and anomaly_detection (flag outliers) go to `/api/v1/explore`.
 2. **Include enough training data.** More rows = better predictions. Aim for 20+ training rows for supervised tasks.
 3. **Keep columns consistent.** Train and test must have the same feature columns.
-4. **Handle errors gracefully.** On 429, back off and retry. On 503/504, retry with exponential backoff. On 422, fix the request.
-5. **Anonymize sensitive data.** Rename columns, map categories to integers.
-6. **Interpret results in context.** Use `probabilities` for classification confidence, `confidence_intervals` for regression uncertainty, `imputed_mask` to see what was filled in.
-7. **Explain predictions when the user asks "why".** For classification/regression, set `feature_importance: true` to get a ranked list of which features drive the model — useful for feature selection, sanity checks, and explaining results. Expect the request to take longer.
+4. **Estimate large requests first.** `POST /api/v1/estimate` with `{"task", "train_rows", "test_rows", "columns", "feature_importance"}` returns the cell count, applied multiplier, price, your remaining quota, and `would_exceed` — without sending any data or consuming any quota. Use it before large or repeated workloads.
+5. **Handle errors gracefully.** On 429, back off and retry (honor `Retry-After` when present). On 503/504, retry with exponential backoff. On 422, fix the request — and if the error is `request_exceeds_cell_limit`, split the data into smaller requests instead of retrying.
+6. **Anonymize sensitive data.** Rename columns, map categories to integers.
+7. **Interpret results in context.** Use `probabilities` for classification confidence, `confidence_intervals` for regression uncertainty, `imputed_mask` to see what was filled in.
+8. **Explain predictions when the user asks "why".** For classification/regression, set `feature_importance: true` to get a ranked list of which features drive the model — useful for feature selection, sanity checks, and explaining results. Expect the request to take longer.
 
 ## Example: Classification (JSON)
 
